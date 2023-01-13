@@ -24,6 +24,18 @@ import { extname } from "path";
 import { pipeline } from "stream";
 import { getPDFReadableStream } from "../../library/pdf/pdfTools.js";
 
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "epicode-week14-BE-netflix-apis",
+    },
+  }),
+}).single("mediaPicture");
+
 const { NotFound } = createHttpError;
 
 const mediaRouter = express.Router();
@@ -64,31 +76,48 @@ mediaRouter.get("/:id", async (req, res, next) => {
   }
 });
 
-mediaRouter.post(
-  "/:id/poster",
-  multer().single("mediaPicture"),
-  async (req, res, next) => {
-    try {
-      // console.log("file posting req body", req.body);
-      // console.log("file posting req.file", req.file);
+mediaRouter.post("/:id/poster", cloudinaryUploader, async (req, res, next) => {
+  try {
+    const fileName = req.params.id + extname(req.file.originalname);
+    const url = req.file.path;
 
-      const fileName = req.params.id + extname(req.file.originalname);
+    const media = await findMediaByIdAndUpdate(req.params.id, {
+      poster: `${url}`,
+    });
 
-      const media = await findMediaByIdAndUpdate(req.params.id, {
-        poster: `/img/products/${fileName}`,
-      });
-
-      if (media) {
-        await saveMediaPictures(fileName, req.file.buffer);
-        res.send(media);
-      } else {
-        next(NotFound(`Media with id ${req.params.id} not found!`));
-      }
-    } catch (error) {
-      next(error);
+    if (media) {
+      await saveMediaPictures(fileName, req.file.buffer);
+      res.send(media);
+    } else {
+      next(NotFound(`Media with id ${req.params.id} not found!`));
     }
+  } catch (error) {
+    next(error);
   }
-);
+});
+
+// mediaRouter.post(
+//   "/:id/poster",
+//   multer().single("mediaPicture"),
+//   async (req, res, next) => {
+//     try {
+//       const fileName = req.params.id + extname(req.file.originalname);
+
+//       const media = await findMediaByIdAndUpdate(req.params.id, {
+//         poster: `/img/products/${fileName}`,
+//       });
+
+//       if (media) {
+//         await saveMediaPictures(fileName, req.file.buffer);
+//         res.send(media);
+//       } else {
+//         next(NotFound(`Media with id ${req.params.id} not found!`));
+//       }
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
 
 mediaRouter.get("/:id/pdf", async (req, res, next) => {
   res.setHeader("Content-Disposition", "attachment; filename=test.pdf");
