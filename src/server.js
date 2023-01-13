@@ -7,10 +7,14 @@ import {
   notFoundHandler,
   genericErrorHandler,
 } from "./errorHandlers.js";
+import { join } from "path";
+import swagger from "swagger-ui-express";
+import yaml from "yamljs";
 
 const server = express();
 
 const port = process.env.PORT;
+const yamlFile = yaml.load(join(process.cwd(), "./src/docs/apiDocs.yml"));
 
 //Middlewares
 
@@ -43,6 +47,7 @@ server.use("/medias", mediaRouter);
 server.use(badRequestHandler);
 server.use(notFoundHandler);
 server.use(genericErrorHandler);
+server.use("/docs", swagger.serve, swagger.setup(yamlFile));
 
 server.listen(port, () => {
   console.table(listEndpoints(server));

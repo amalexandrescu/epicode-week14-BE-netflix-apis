@@ -1,0 +1,91 @@
+openapi: 3.0.3
+info:
+  title: Netflix APIS
+  description: We have movies and files (pictures)
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+    variables: {}
+    description: Local server
+paths:
+  /medias:
+    post:
+      tags:
+        - movies
+      summary: Add a new movie to the db
+      requestBody:
+        description: Creates a new movie
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Media"
+      responses:
+        "201":
+          description: The ID of the newly created movie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/GenericServerError"
+    get:
+      tags:
+        - movies
+      summary: Returns a list of movies.
+      responses:
+        "200":
+          description: A list of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Media"
+        "500":
+          $ref: "#/components/responses/GenericServerError"
+components:
+  responses:
+    NotFound:
+      description: The specific resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Some problems with your request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Bearer token missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    GenericServerError:
+      description: A problem on the server occurred
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Media:
+      type: object
+      properties:
+        year:
+          type: number
+        title:
+          type: string
+        type:
+          type: string
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
