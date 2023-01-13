@@ -36,9 +36,11 @@ export const checkNewMediaSchema = checkSchema(mediasSchema);
 export const checkValidationResult = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    createHttpError(400, "Media validation has errors", {
-      errorsList: errors.array(),
-    });
+    next(
+      createHttpError(400, "Media validation has errors", {
+        errorsList: errors.array(),
+      })
+    );
   } else {
     next();
   }
